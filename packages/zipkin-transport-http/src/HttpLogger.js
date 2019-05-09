@@ -1,11 +1,3 @@
-/* eslint-disable no-console */
-const globalFetch =
-  (typeof window !== 'undefined' && window.fetch) ||
-  (typeof global !== 'undefined' && global.fetch);
-
-// eslint-disable-next-line global-require
-const fetch = globalFetch || require('node-fetch');
-
 const {
   jsonEncoder: {JSON_V1}
 } = require('zipkin');
@@ -21,7 +13,8 @@ class HttpLogger extends EventEmitter {
     timeout = 0,
     maxPayloadSize = 0,
     /* eslint-disable no-console */
-    log = console
+    log = console,
+    fetch
   }) {
     super(); // must be before any reference to *this*
     this.log = log;
@@ -30,6 +23,7 @@ class HttpLogger extends EventEmitter {
     this.queue = [];
     this.queueBytes = 0;
     this.jsonEncoder = jsonEncoder;
+    this.fetch = fetch;
 
     this.errorListenerSet = false;
 
@@ -86,7 +80,7 @@ class HttpLogger extends EventEmitter {
     const self = this;
     if (self.queue.length > 0) {
       const postBody = `[${self.queue.join(',')}]`;
-      fetch(self.endpoint, {
+      this.fetch(self.endpoint, {
         method: 'POST',
         body: postBody,
         headers: self.headers,
